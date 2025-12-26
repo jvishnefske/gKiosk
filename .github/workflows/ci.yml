@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main, standardize-repo]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            libgtk-3-dev \
+            libwebkit2gtk-4.0-dev \
+            libboost-all-dev \
+            lcov
+
+      - name: Build
+        run: make
+
+      - name: Build with coverage
+        run: make coverage-build
+
+      - name: Generate coverage report
+        run: make coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage-report/
+          retention-days: 30
+
+      - name: Upload coverage info
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-info
+          path: coverage-build/coverage.info
+          retention-days: 30
