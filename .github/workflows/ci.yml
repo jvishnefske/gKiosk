@@ -23,7 +23,7 @@ jobs:
             cmake \
             ninja-build \
             libgtk-3-dev \
-            libwebkit2gtk-4.0-dev \
+            libwebkit2gtk-4.1-dev \
             libboost-all-dev \
             lcov
 
