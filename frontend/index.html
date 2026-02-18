@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>gKiosk</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: -webkit-system-font, system-ui, sans-serif;
+        background: #1a1a2e;
+        color: #e0e0e0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+    #clock {
+        font-size: 8vw;
+        font-weight: 200;
+        letter-spacing: 0.05em;
+        color: #fff;
+        margin-bottom: 0.2em;
+    }
+    #date {
+        font-size: 2vw;
+        font-weight: 300;
+        color: #8888aa;
+        margin-bottom: 3em;
+    }
+    h1 {
+        font-size: 2.5vw;
+        font-weight: 300;
+        color: #5555aa;
+        margin-bottom: 0.5em;
+    }
+    #status {
+        font-size: 1.2vw;
+        color: #6a6a8a;
+    }
+    #status span {
+        display: inline-block;
+        width: 0.6em;
+        height: 0.6em;
+        border-radius: 50%;
+        background: #44cc88;
+        margin-right: 0.4em;
+        vertical-align: middle;
+    }
+</style>
+</head>
+<body>
+<div id="clock"></div>
+<div id="date"></div>
+<h1>gKiosk</h1>
+<div id="status"><span></span>Ready &mdash; set KIOSK_URL to load your application</div>
+<script>
+(function() {
+    var clockEl = document.getElementById('clock');
+    var dateEl = document.getElementById('date');
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+    function update() {
+        var now = new Date();
+        clockEl.textContent = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+        dateEl.textContent = now.toLocaleDateString(undefined, {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+    }
+    update();
+    setInterval(update, 1000);
+})();
+</script>
+</body>
+</html>

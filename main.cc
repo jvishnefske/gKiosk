@@ -4,6 +4,28 @@
 #include <cstdlib>
 #include <string>
 #include <algorithm>
+#include <unistd.h>
+#include <climits>
+
+static std::string get_default_frontend_url()
+{
+    char buf[PATH_MAX];
+    ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
+    if(len > 0){
+        buf[len] = '\0';
+        std::string exe_path(buf);
+        auto pos = exe_path.rfind('/');
+        if(pos != std::string::npos){
+            std::string dir = exe_path.substr(0, pos);
+            // Check relative to build dir: ../frontend/index.html
+            std::string candidate = dir + "/../frontend/index.html";
+            if(access(candidate.c_str(), R_OK) == 0){
+                return "file://" + candidate;
+            }
+        }
+    }
+    return "https://example.com/";
+}
 
 extern "C"{
 void activate(GtkApplication *app, gpointer user_data)
@@ -12,7 +34,7 @@ void activate(GtkApplication *app, gpointer user_data)
     const auto url{[](){
         const auto * char_url = std::getenv("KIOSK_URL");
         if(char_url == nullptr){
-            return std::string("https://example.com/");
+            return get_default_frontend_url();
         }
         return std::string(char_url);
     }()};
