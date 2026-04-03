@@ -1,0 +1,17 @@
+[Unit]
+Description=gKiosk Fullscreen Web Kiosk Browser
+After=graphical-session.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=DISPLAY=:0
+Environment=KIOSK_URL=https://example.com/
+EnvironmentFile=-/etc/gkiosk/environment
+ExecStart=/usr/bin/gkiosk
+Restart=on-failure
+RestartSec=5
+User=kiosk
+
+[Install]
+WantedBy=graphical-session.target

@@ -24,6 +24,8 @@ jobs:
             ninja-build \
             libgtk-3-dev \
             libwebkit2gtk-4.1-dev \
+            libboost-coroutine-dev \
+            libboost-context-dev \
             libboost-all-dev \
             lcov
 
@@ -49,3 +51,91 @@ jobs:
           name: coverage-info
           path: coverage-build/coverage.info
           retention-days: 30
+
+  package:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build and packaging dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libboost-coroutine-dev \
+            libboost-context-dev \
+            dpkg-dev \
+            fakeroot
+
+      - name: Build project
+        run: |
+          cmake -B build -S . -GNinja -DCMAKE_INSTALL_PREFIX=/usr
+          cmake --build build
+
+      - name: Create deb package
+        run: |
+          PKG_DIR=$(mktemp -d)
+          mkdir -p "${PKG_DIR}/usr/bin"
+          mkdir -p "${PKG_DIR}/lib/systemd/system"
+          mkdir -p "${PKG_DIR}/etc/gkiosk"
+          mkdir -p "${PKG_DIR}/DEBIAN"
+
+          cp build/gKiosk "${PKG_DIR}/usr/bin/gkiosk"
+          chmod 0755 "${PKG_DIR}/usr/bin/gkiosk"
+
+          cp gkiosk.service "${PKG_DIR}/lib/systemd/system/gkiosk.service"
+          chmod 0644 "${PKG_DIR}/lib/systemd/system/gkiosk.service"
+
+          cat > "${PKG_DIR}/DEBIAN/control" << 'CTRL'
+          Package: gkiosk
+          Version: 1.0.0
+          Section: web
+          Priority: optional
+          Architecture: amd64
+          Depends: libgtk-3-0, libwebkit2gtk-4.1-0
+          Maintainer: gKiosk Developers <dev@example.com>
+          Description: Lightweight fullscreen kiosk web browser
+           gKiosk is a GTK3/WebKit2 kiosk browser for Linux that displays a
+           fullscreen web page. Features persistent cookies and gamepad support.
+          CTRL
+          sed -i 's/^          //' "${PKG_DIR}/DEBIAN/control"
+
+          fakeroot dpkg-deb --build "${PKG_DIR}" gkiosk_1.0.0_amd64.deb
+
+      - name: Upload deb package
+        uses: actions/upload-artifact@v4
+        with:
+          name: gkiosk-deb
+          path: gkiosk_1.0.0_amd64.deb
+          retention-days: 90
+
+  release:
+    runs-on: ubuntu-latest
+    needs: package
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download deb package
+        uses: actions/download-artifact@v4
+        with:
+          name: gkiosk-deb
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-build.${{ github.run_number }}
+          name: gKiosk Build ${{ github.run_number }}
+          files: gkiosk_1.0.0_amd64.deb
+          generate_release_notes: true
