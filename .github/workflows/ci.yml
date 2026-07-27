@@ -24,8 +24,6 @@ jobs:
             ninja-build \
             libgtk-3-dev \
             libwebkit2gtk-4.1-dev \
-            libboost-coroutine-dev \
-            libboost-context-dev \
             libboost-all-dev \
             lcov
 
@@ -94,19 +92,21 @@ jobs:
           cp gkiosk.service "${PKG_DIR}/lib/systemd/system/gkiosk.service"
           chmod 0644 "${PKG_DIR}/lib/systemd/system/gkiosk.service"
 
-          cat > "${PKG_DIR}/DEBIAN/control" << 'CTRL'
-          Package: gkiosk
-          Version: 1.0.0
-          Section: web
-          Priority: optional
-          Architecture: amd64
-          Depends: libgtk-3-0, libwebkit2gtk-4.1-0
-          Maintainer: gKiosk Developers <dev@example.com>
-          Description: Lightweight fullscreen kiosk web browser
-           gKiosk is a GTK3/WebKit2 kiosk browser for Linux that displays a
-           fullscreen web page. Features persistent cookies and gamepad support.
-          CTRL
-          sed -i 's/^          //' "${PKG_DIR}/DEBIAN/control"
+          printf '%s\n' \
+            "Package: gkiosk" \
+            "Version: 1.0.0" \
+            "Section: web" \
+            "Priority: optional" \
+            "Architecture: amd64" \
+            "Depends: libgtk-3-0, libwebkit2gtk-4.1-0" \
+            "Maintainer: gKiosk Developers <dev@example.com>" \
+            "Description: Lightweight fullscreen kiosk web browser" \
+            " gKiosk is a GTK3/WebKit2 kiosk browser for Linux that displays a" \
+            " fullscreen web page. Features persistent cookies and gamepad support." \
+            > "${PKG_DIR}/DEBIAN/control"
+
+          cp debian/postinst "${PKG_DIR}/DEBIAN/postinst"
+          chmod 0755 "${PKG_DIR}/DEBIAN/postinst"
 
           fakeroot dpkg-deb --build "${PKG_DIR}" gkiosk_1.0.0_amd64.deb
 

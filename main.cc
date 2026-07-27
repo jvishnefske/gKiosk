@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <cstring>
+#include <cerrno>
 
 static int js_fd = -1;
 static WebKitWebView *g_web_view = nullptr;
@@ -89,6 +90,7 @@ static void inject_key_event(WebKitWebView *web_view, guint keyval)
 static gboolean poll_joystick(gpointer user_data)
 {
     (void)user_data;
+    static int prev_axis_dir[8] = {0};
     if (js_fd < 0 || g_web_view == nullptr) {
         js_fd = open_joystick();
         return TRUE;
@@ -115,39 +117,50 @@ static gboolean poll_joystick(gpointer user_data)
             }
         } else if (event.type == JS_EVENT_AXIS) {
             const int threshold = 16384;
+            int dir = 0;
+            guint keyval_neg = 0, keyval_pos = 0;
             switch (event.number) {
                 case 0: // Left stick X-axis
-                    if (event.value < -threshold) {
-                        inject_key_event(g_web_view, GDK_KEY_Left);
-                    } else if (event.value > threshold) {
-                        inject_key_event(g_web_view, GDK_KEY_Right);
-                    }
+                    if (event.value < -threshold) dir = -1;
+                    else if (event.value > threshold) dir = 1;
+                    keyval_neg = GDK_KEY_Left;
+                    keyval_pos = GDK_KEY_Right;
                     break;
                 case 1: // Left stick Y-axis
-                    if (event.value < -threshold) {
-                        inject_key_event(g_web_view, GDK_KEY_Up);
-                    } else if (event.value > threshold) {
-                        inject_key_event(g_web_view, GDK_KEY_Down);
-                    }
+                    if (event.value < -threshold) dir = -1;
+                    else if (event.value > threshold) dir = 1;
+                    keyval_neg = GDK_KEY_Up;
+                    keyval_pos = GDK_KEY_Down;
                     break;
                 case 6: // D-pad X-axis
-                    if (event.value < 0) {
-                        inject_key_event(g_web_view, GDK_KEY_Left);
-                    } else if (event.value > 0) {
-                        inject_key_event(g_web_view, GDK_KEY_Right);
-                    }
+                    if (event.value < 0) dir = -1;
+                    else if (event.value > 0) dir = 1;
+                    keyval_neg = GDK_KEY_Left;
+                    keyval_pos = GDK_KEY_Right;
                     break;
                 case 7: // D-pad Y-axis
-                    if (event.value < 0) {
-                        inject_key_event(g_web_view, GDK_KEY_Up);
-                    } else if (event.value > 0) {
-                        inject_key_event(g_web_view, GDK_KEY_Down);
-                    }
+                    if (event.value < 0) dir = -1;
+                    else if (event.value > 0) dir = 1;
+                    keyval_neg = GDK_KEY_Up;
+                    keyval_pos = GDK_KEY_Down;
                     break;
                 default:
                     break;
             }
+            if (event.number <= 7 && dir != prev_axis_dir[event.number]) {
+                if (dir == -1) {
+                    inject_key_event(g_web_view, keyval_neg);
+                } else if (dir == 1) {
+                    inject_key_event(g_web_view, keyval_pos);
+                }
+                prev_axis_dir[event.number] = dir;
+            }
         }
+    }
+    if (errno != EAGAIN && errno != EWOULDBLOCK) {
+        close(js_fd);
+        js_fd = -1;
+        std::memset(prev_axis_dir, 0, sizeof(prev_axis_dir));
     }
     return TRUE;
 }
