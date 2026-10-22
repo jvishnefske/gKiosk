@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(browser)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(sanitize OFF)
 include(FindPkgConfig)
 find_package(Boost REQUIRED COMPONENTS coroutine)

@@ -49,3 +49,32 @@ jobs:
           name: coverage-info
           path: coverage-build/coverage.info
           retention-days: 30
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # clang-tidy needs the real include paths, so the GTK/WebKit/Boost
+      # dev packages are installed and CMake is configured (no build) to
+      # produce cmake-build/compile_commands.json.
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libboost-all-dev \
+            clang-format \
+            clang-tidy
+
+      - name: clang-format
+        run: make format-check
+
+      - name: clang-tidy
+        run: make tidy

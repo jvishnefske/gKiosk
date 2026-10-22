@@ -1,0 +1,10 @@
+---
+# Close to the existing hand-written style: 4-space indent, attached braces,
+# long lines allowed, include order left as written.
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 120
+SortIncludes: Never
+AlwaysBreakTemplateDeclarations: Yes
+LambdaBodyIndentation: OuterScope
+...
