@@ -5,13 +5,12 @@
 #include <string>
 #include <algorithm>
 
-extern "C"{
-void activate(GtkApplication *app, gpointer user_data)
-{
-    (void) user_data;
-    const auto url{[](){
-        const auto * char_url = std::getenv("KIOSK_URL");
-        if(char_url == nullptr){
+extern "C" {
+void activate(GtkApplication *app, gpointer user_data) {
+    (void)user_data;
+    const auto url{[]() {
+        const auto *char_url = std::getenv("KIOSK_URL");
+        if (char_url == nullptr) {
             return std::string("https://example.com/");
         }
         return std::string(char_url);
@@ -33,9 +32,9 @@ void activate(GtkApplication *app, gpointer user_data)
 }
 }
 
-int main(int argc, char** argv){
+int main(int argc, char **argv) {
     std::shared_ptr<GtkApplication> p_app{gtk_application_new(nullptr, G_APPLICATION_FLAGS_NONE), g_object_unref};
     g_signal_connect(p_app.get(), "activate", G_CALLBACK(activate), nullptr);
-    const auto status = g_application_run (G_APPLICATION (p_app.get()), argc, argv);
+    const auto status = g_application_run(G_APPLICATION(p_app.get()), argc, argv);
     return status;
 }

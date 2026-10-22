@@ -1,0 +1,13 @@
+---
+# Conservative starting set: passes on the current code. Widen over time.
+Checks: >
+  -*,
+  clang-analyzer-*,
+  bugprone-*,
+  -bugprone-exception-escape,
+  performance-*,
+  -performance-avoid-endl,
+  portability-*
+WarningsAsErrors: '*'
+HeaderFilterRegex: ''
+...

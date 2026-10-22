@@ -27,4 +27,15 @@ coverage: coverage-build
 	genhtml coverage-build/coverage.info --output-directory coverage-report
 	@echo "Coverage report generated in coverage-report/index.html"
 
-.PHONY: all clean coverage coverage-build
+# Lint (config in .clang-format / .clang-tidy)
+LINT_SOURCES = main.cc taskHelper.cpp
+
+format-check:
+	clang-format --dry-run --Werror $(LINT_SOURCES)
+
+tidy: cmake-build/build.ninja
+	clang-tidy -p cmake-build $(LINT_SOURCES)
+
+lint: format-check tidy
+
+.PHONY: all clean coverage coverage-build format-check tidy lint
